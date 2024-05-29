@@ -1,0 +1,19 @@
+# Combiner parameters
+num_neighbors: 3
+num_encoder_layers: 1
+num_heads: 4
+dropout: 0.1
+
+# Negative Mining parameters: 
+num_negatives: 10
+cluster_size: 512
+
+# Neighbors parameters
+seen_neighbors_filepath: 
+novel_neighbors_filepath:
+
+# Training Parameters
+num_epochs: 20
+batch_size: 2048
+margin: 0.1
+lr: 0.0002

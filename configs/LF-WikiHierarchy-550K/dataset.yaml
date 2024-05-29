@@ -1,0 +1,2 @@
+dataset: LF-WikiHierarchy-550K
+tf_max_len: 32
