@@ -2,3 +2,7 @@
 __pycache__/
 ipynb/
 Datasets/
+Dataset_Assets/
+Results/
+wandb/
+**/__pycache__

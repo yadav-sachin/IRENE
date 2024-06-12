@@ -26,23 +26,28 @@ np.int = int
 np.float = float
 np.bool = bool
 
+
 def timeit(func):
     """Print the runtime of the decorated function"""
+
     @functools.wraps(func)
     def wrapper_timer(*args, **kwargs):
-        start_time = time.perf_counter()    
+        start_time = time.perf_counter()
         value = func(*args, **kwargs)
-        end_time = time.perf_counter()      
+        end_time = time.perf_counter()
         run_time = end_time - start_time
         print("Finished {} in {:.4f} secs".format(func.__name__, run_time))
         return value
+
     return wrapper_timer
 
 
 from contextlib import contextmanager
+
+
 @contextmanager
 def evaluating(net):
-    '''Temporarily switch to evaluation mode.'''
+    """Temporarily switch to evaluation mode."""
     istrain = net.training
     try:
         net.eval()
@@ -53,36 +58,47 @@ def evaluating(net):
 
 
 @timeit
-def get_lbl_representations_zsxc_scores_wo_encoder(
+def get_irene_lbl_representations(
     unnorm_lbl_embeddings,
-    neighbors_lbl_indices,
-    neighbors_scores,
+    neighbor_indices,
+    neighbor_scores,
     self_and_neighbors_attn_mask,
-    num_Z,
     model,
-    bsz=2000,
+    batch_size=2048,
 ):
-    """Get Label Representations when we already have embeddings"""
+    num_lbls = len(unnorm_lbl_embeddings)
     with evaluating(model), torch.no_grad():
-        for i in tqdm(range(0, num_Z, bsz)):
-            batch_embeddings = torch.FloatTensor(unnorm_lbl_embeddings[i: i + bsz]).to(model.device)
-            batch_neighbors_lbl_indices = torch.LongTensor(neighbors_lbl_indices[i: i + bsz]).to(model.device)
-            batch_neighbors_scores = torch.LongTensor(neighbors_scores[i: i + bsz]).to(model.device)
-            batch_self_and_neighbors_attn_mask = torch.from_numpy(self_and_neighbors_attn_mask[i: i + bsz]).bool().to(model.device)
-            _batch_embeddings = (
+        for i in range(0, num_lbls, batch_size):
+            b_lbl_embeddings = torch.FloatTensor(
+                unnorm_lbl_embeddings[i : i + batch_size]
+            ).to(model.device)
+            b_neighbor_indices = torch.LongTensor(
+                neighbor_indices[i : i + batch_size]
+            ).to(model.device)
+            b_neighbor_scores = torch.LongTensor(
+                neighbor_scores[i : i + batch_size]
+            ).to(model.device)
+            b_self_and_neighbors_attn_mask = (
+                torch.from_numpy(self_and_neighbors_attn_mask[i : i + batch_size])
+                .bool()
+                .to(model.device)
+            )
+
+            b_irene_reprs = (
                 model.encode_label_combined_repr(
-                    lbl_embeddings=batch_embeddings,
-                    neighbors_index=batch_neighbors_lbl_indices,
-                    neighbors_scores=batch_neighbors_scores,
-                    self_and_neighbors_attention_mask=batch_self_and_neighbors_attn_mask,
+                    lbl_embeddings=b_lbl_embeddings,
+                    neighbors_index=b_neighbor_indices,
+                    neighbors_scores=b_neighbor_scores,
+                    self_and_neighbors_attention_mask=b_self_and_neighbors_attn_mask,
                 )
                 .cpu()
                 .numpy()
             )
             if i == 0:
-                embeddings = np.zeros((num_Z, _batch_embeddings.shape[1]))
-            embeddings[i: i + batch_embeddings.shape[0]] = _batch_embeddings
-    return embeddings
+                irene_reprs = np.zeros((num_lbls, b_irene_reprs.shape[1]))
+            irene_reprs[i : i + b_lbl_embeddings.shape[0]] = b_irene_reprs
+    return irene_reprs
+
 
 def get_filter_map(fname):
     """Load filter file as numpy array"""
@@ -106,7 +122,7 @@ def evaluate(_true, _pred, _train, k, A, B, recall_only=False):
     * use recall_only = True when dataset is large
     * k: used only for recall@k (precision etc., are computed till @5)
     """
-    _true.indices = _true.indices.astype('int64')
+    _true.indices = _true.indices.astype("int64")
     if not recall_only:
         inv_propen = xc_metrics.compute_inv_propesity(_train, A, B)
         print("Will remove instances without any labels during evaluation")
@@ -120,9 +136,9 @@ def evaluate(_true, _pred, _train, k, A, B, recall_only=False):
     return acc, rec
 
 
-def evaluate_with_filter(true_labels, predicted_labels,
-                         train_labels, filter_labels, k,
-                         A, B, recall_only):
+def evaluate_with_filter(
+    true_labels, predicted_labels, train_labels, filter_labels, k, A, B, recall_only
+):
     """Evaluate function with support of filter file
     * use recall_only = True when dataset is large
     * k: used only for recall@k (precision etc., are computed till @5)
@@ -130,8 +146,7 @@ def evaluate_with_filter(true_labels, predicted_labels,
     print(f"Using filter file for evaluation: {filter_labels}")
     mapping = get_filter_map(filter_labels)
     predicted_labels = filter_predictions(predicted_labels, mapping)
-    return evaluate(
-        true_labels, predicted_labels, train_labels, k, A, B, recall_only)
+    return evaluate(true_labels, predicted_labels, train_labels, k, A, B, recall_only)
 
 
 def _predict_anns(X, clf, k, M=100, efC=300):
@@ -142,8 +157,14 @@ def _predict_anns(X, clf, k, M=100, efC=300):
     """
     num_instances, num_labels = len(X), len(clf)
     graph = Shortlist(
-        method='hnswlib', M=M, efC=efC, efS=k,
-        num_neighbours=k, space='cosine', num_threads=64)    
+        method="hnswlib",
+        M=M,
+        efC=efC,
+        efS=k,
+        num_neighbours=k,
+        space="cosine",
+        num_threads=64,
+    )
     print("Training ANNS")
     graph.fit(clf)
     print("Predicting using ANNS")
@@ -156,88 +177,107 @@ def _predict_ova(X, clf, k=20, batch_size=32, device="cuda", return_sparse=True)
     """Predictions in brute-force manner"""
     torch.set_grad_enabled(False)
     num_instances, num_labels = len(X), len(clf)
-    batches = np.array_split(range(num_instances), num_instances//batch_size)
-    output = SMatrix(
-        n_rows=num_instances,
-        n_cols=num_labels,
-        nnz=k)
-    X = torch.from_numpy(X)        
+    batches = np.array_split(range(num_instances), num_instances // batch_size)
+    output = SMatrix(n_rows=num_instances, n_cols=num_labels, nnz=k)
+    X = torch.from_numpy(X)
     clf = torch.from_numpy(clf.astype(np.float32)).to(device).T
     for ind in tqdm(batches):
         s_ind, e_ind = ind[0], ind[-1] + 1
-        _X = X[s_ind: e_ind].to(device)
+        _X = X[s_ind:e_ind].to(device)
         ans = _X @ clf
-        vals, ind = torch.topk(
-            ans, k=k, dim=-1, sorted=True)
-        output.update_block(
-            s_ind, ind.cpu().numpy(), vals.cpu().numpy())
+        vals, ind = torch.topk(ans, k=k, dim=-1, sorted=True)
+        output.update_block(s_ind, ind.cpu().numpy(), vals.cpu().numpy())
         del _X
     if return_sparse:
         return output.data()
     else:
-        return output.data('dense')[0]
+        return output.data("dense")[0]
 
 
-def predict_and_eval(features, clf, labels,
-                     trn_labels, filter_labels,
-                     A, B, k=10, mode='ova', huge=False, device="cuda:0"):
+def predict_and_eval(
+    features,
+    clf,
+    labels,
+    trn_labels,
+    filter_labels,
+    A=0.55,
+    B=1.5,
+    k=10,
+    mode="ova",
+    huge=False,
+    device="cuda:0",
+):
     """
     Predict on validation set and evaluate
     * support for filter file (pass "" or empty file otherwise)
     * ova will get top-k predictions but anns would get 300 (change if required)"""
-    mode='anns' if huge else mode
-    if mode == 'ova':
-        pred = _predict_ova(normalize(features, copy=True), normalize(clf, copy=True), k=k, device=device)
+    mode = "anns" if huge else mode
+    if mode == "ova":
+        pred = _predict_ova(features.copy(), clf.copy(), k=k, device=device)
     else:
         pred = _predict_anns(features, clf, k=300)
-    labels.indices = labels.indices.astype('int64')
-    acc, r = evaluate_with_filter(labels, pred, trn_labels, filter_labels, k, A, B, huge)
+    labels.indices = labels.indices.astype("int64")
+    acc, r = evaluate_with_filter(
+        labels, pred, trn_labels, filter_labels, k, A, B, huge
+    )
     return acc, r, pred
 
 
-def validate_scores_direct(args, snet, val_X_Y, trn_X_Y, eval_neighbors_lbl_indices, eval_neighbors_scores, val_doc_embeddings, lbl_embeddings, prefix=f"", mode="ova", epoch="latest", device="cuda:1"):
+def validate(
+    args,
+    net,
+    Y_eval,
+    eval_neighbor_indices,
+    eval_neighbor_scores,
+    eval_doc_embeddings,
+    lbl_embeddings,
+    prefix=f"",
+    mode="ova",
+    epoch="latest",
+    device="cuda:1",
+):
     self_and_neighbors_attn_mask = np.zeros(
-        (eval_neighbors_lbl_indices.shape[0], args.num_neighbors + 1), dtype=np.int64
+        (eval_neighbor_indices.shape[0], args.num_neighbors + 1), dtype=np.int64
     )
     self_and_neighbors_attn_mask[:, 0] = 1
-    self_and_neighbors_attn_mask[:, 1:] = eval_neighbors_lbl_indices[:, :args.num_neighbors] < args.num_lbls
+    self_and_neighbors_attn_mask[:, 1:] = (
+        eval_neighbor_indices[:, : args.num_neighbors] < args.num_trn_lbls
+    )
 
-    label_representations = get_lbl_representations_zsxc_scores_wo_encoder(
+    irene_lbl_representations = get_irene_lbl_representations(
         unnorm_lbl_embeddings=lbl_embeddings,
-        neighbors_lbl_indices=eval_neighbors_lbl_indices[:, :args.num_neighbors],
-        neighbors_scores=eval_neighbors_scores[:, :args.num_neighbors],
+        neighbor_indices=eval_neighbor_indices[:, : args.num_neighbors],
+        neighbor_scores=eval_neighbor_scores[:, : args.num_neighbors],
         self_and_neighbors_attn_mask=self_and_neighbors_attn_mask,
-        num_Z=val_X_Y.shape[1],
-        model=snet,
+        model=net,
     )
 
+    os.makedirs(os.path.join(args.OUT_DIR, "embeddings"), exist_ok=True)
     np.save(
-        os.path.join(args.result_dir, "embeddings", f"{prefix}_{epoch}.zsxc.npy"),
-        label_representations,
+        os.path.join(args.OUT_DIR, "embeddings", f"Y_{prefix}_{epoch}.irene.npy"),
+        irene_lbl_representations,
     )
 
-    if "unseen" in prefix:
-        args_filter_labels = args.tst_unseen_filter_labels
+    if "zero" in prefix:
+        filter_labels = args.filter_labels_zero_filename
     else:
-        args_filter_labels = args.tst_seen_filter_labels
-    
-    if args_filter_labels == "":
+        filter_labels = args.filter_labels_full_filename
+
+    if filter_labels == "":
         filter_labels = None
     else:
-        filter_labels = os.path.join(args.zero_shot_dir, args_filter_labels)
+        filter_labels = os.path.join(args.DATA_DIR, filter_labels)
+
     acc, r, pred = predict_and_eval(
-        val_doc_embeddings,
-        label_representations,
-        val_X_Y,
-        trn_X_Y,
-        filter_labels,
-        A=args.A,
-        B=args.B,
-        k=args.k,
-        mode=mode,
-        huge=args.huge,
+        features=eval_doc_embeddings,
+        clf=irene_lbl_representations,
+        labels=Y_eval,
+        trn_labels=csr_matrix((len(eval_doc_embeddings), len(irene_lbl_representations))),
+        filter_labels=filter_labels,
+        k=args.eval_k,
+        mode=args.eval_mode,
         device=device,
     )
-    del label_representations
+    del irene_lbl_representations
     gc.collect()
     return acc, r

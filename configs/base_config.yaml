@@ -1,0 +1,45 @@
+# General Parameters
+project: IRENE # project name
+expname: meta_clf_gen_train # Experiment name
+desc: "Training Meta-Classifier Genearator (MCG)" # Short description of the experiment
+
+# Default Combiner Parameters
+num_neighbors: 3
+num_encoder_layers: 1
+num_heads: 4
+dropout: 0.1
+dim: 768
+
+save_model: True # Save the model
+
+cls_devices: "0"
+device: 0
+eval_epochs: "0,10,20,30,39"
+
+# Base Filenames
+Y_trn_filename: "Y.trn.npz"
+Y_tst_zero_filename: "Y.tst_zero.npz"
+Y_tst_full_filename: "Y.tst_full.npz"
+Y_trn_neighbor_indices_filename: "Y_trn_neighbor_indices.npy"
+Y_trn_neighbor_scores_filename: "Y_trn_neighbor_scores.npy"
+Y_zero_neighbor_indices_filename: "Y_zero_neighbor_indices.npy"
+
+# Filter Filenames
+filter_labels_zero_filename: "filter_labels_test_zero.txt"
+filter_labels_full_filename: "filter_labels_test_full.txt"
+
+# Embeddings and Classifiers Filenames
+trn_X_unnorm_embeddings_filename: "trn_X_unnorm.npy"
+tst_X_full_unnorm_embeddings_filename: "tst_X_full_unnorm.npy"
+tst_X_zero_unnorm_embeddings_filename: "tst_X_zero_unnorm.npy"
+Y_full_unnorm_embeddings_filename: "Y_full_unnorm.npy"
+Y_zero_unnorm_embeddings_filename: "Y_zero_unnorm.npy"
+Y_trn_unnorm_embeddings_filename: "Y_trn_unnorm.npy"
+Y_trn_unnorm_classifiers_filename: "Y_trn_classifiers_unnorm.npy"
+
+# About Neighbors
+neighbor_itself: False # When combining for train labels, don't use its own classifier
+
+# Evaluation
+eval_mode: "ova"
+eval_k: 200

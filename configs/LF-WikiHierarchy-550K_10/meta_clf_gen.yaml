@@ -1,0 +1,28 @@
+__dependency__: configs/base_config.yaml, configs/LF-WikiHierarchy-550K_10/dataset.yaml
+expname: meta_clf_gen_train
+desc: "Training Meta-Classifier Genearator (MCG)"
+
+# Base Encoder
+base_retriever: "NGAME"
+
+# Combiner parameters
+num_neighbors: 3
+num_layers: 1
+num_heads: 4
+
+# Negative Mining parameters:
+num_negatives: 10
+cl_start_ep: 0
+cl_start_size: 512
+curr_steps: ""
+cl_update: 5
+
+# Neighbors parameters
+seen_neighbors_filepath: 
+novel_neighbors_filepath:
+
+# Training Parameters
+num_epochs: 40
+batch_size: 2048
+margin: 0.1
+lr: 0.0002

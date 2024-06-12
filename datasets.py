@@ -1,17 +1,11 @@
 import torch
 import numpy as np
-import numba as nb
-import random
-import torch.distributed as dist
-from sklearn.preprocessing import normalize
-from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data import Sampler
-from xclib.data import data_utils
 
 
 def clip_batch_lengths(ind, mask, max_len):
     _max = min(np.max(np.sum(mask, axis=1)), max_len)
     return ind[:, :_max], mask[:, :_max]
+
 
 def _collate_fn_neighbors(batch):
     batch_pos_labels = []
@@ -37,7 +31,7 @@ def _collate_fn_neighbors(batch):
         random_chosen_pos_label_indices, dtype=np.int32
     )
 
-    for (i, item) in enumerate(batch_pos_labels):
+    for i, item in enumerate(batch_pos_labels):
         intersection = set(item).intersection(random_chosen_pos_label_indices_set)
         result = np.zeros(batch_size, dtype=np.float32)
         for idx in intersection:
@@ -92,32 +86,31 @@ class DatasetDNeighbors(torch.utils.data.Dataset):
 
     def __init__(
         self,
-        encoder_trn_doc_embedds,
-        seen_trn_X_Y_fname,
-        seen_neighbors_lbl_indices,
-        seen_neighbors_scores,
-        num_seen_lbls,
+        trn_doc_embeddings,
+        Y_trn,
+        Y_trn_neighbor_indices,
+        Y_trn_neighbor_scores,
+        num_trn_lbls,
         num_neighbors,
     ):
         super().__init__()
-        self.seen_trn_X_Y = data_utils.read_gen_sparse(seen_trn_X_Y_fname)
+        self.Y_trn = Y_trn
 
-        self.trn_doc_embedds = normalize(encoder_trn_doc_embedds) if normalize else encoder_trn_doc_embedds
-        self.seen_trn_X_Y = data_utils.read_gen_sparse(seen_trn_X_Y_fname)
+        self.trn_doc_embeddings = trn_doc_embeddings
 
-        self.seen_neighbors_lbl_indices = seen_neighbors_lbl_indices
-        self.seen_neighbors_scores = seen_neighbors_scores
-        self.num_seen_lbls = num_seen_lbls
+        self.Y_trn_neighbor_indices = Y_trn_neighbor_indices
+        self.Y_trn_neighbor_scores = Y_trn_neighbor_scores
+        self.num_trn_lbls = num_trn_lbls
         self.num_neighbors = num_neighbors
 
         assert (
-            num_seen_lbls == self.seen_trn_X_Y.shape[1]
+            num_trn_lbls == self.Y_trn.shape[1]
         ), "Mismatch between the Number of seen labels and the Number of Columns of trn_X_Y (seen train)"
 
     def __getitem__(self, doc_index):
         """Get a Label and Neighbors at given Doc Index"""
-        pos_lbl_indices = self.seen_trn_X_Y[doc_index].indices
-        doc_embedding = self.trn_doc_embedds[doc_index]
+        pos_lbl_indices = self.Y_trn[doc_index].indices
+        doc_embedding = self.trn_doc_embeddings[doc_index]
         pos_chosen_lbl_indx = np.random.choice(pos_lbl_indices)
 
         self_and_neighbors_attn_mask = np.zeros(
@@ -125,14 +118,14 @@ class DatasetDNeighbors(torch.utils.data.Dataset):
         )
         self_and_neighbors_attn_mask[0] = 1
         self_and_neighbors_attn_mask[1:][
-            self.seen_neighbors_lbl_indices[pos_chosen_lbl_indx] < self.num_seen_lbls
+            self.Y_trn_neighbor_indices[pos_chosen_lbl_indx] < self.num_trn_lbls
         ] = 1
 
         item = {
             "pos_indices": pos_lbl_indices,
             "pos_ind": pos_chosen_lbl_indx,
-            "neighbors_indices": self.seen_neighbors_lbl_indices[pos_chosen_lbl_indx],
-            "neighbors_scores": self.seen_neighbors_scores[pos_chosen_lbl_indx],
+            "neighbors_indices": self.Y_trn_neighbor_indices[pos_chosen_lbl_indx],
+            "neighbors_scores": self.Y_trn_neighbor_scores[pos_chosen_lbl_indx],
             "self_and_neighbors_attn_mask": self_and_neighbors_attn_mask,
             "index": doc_index,
             "doc_embedding": doc_embedding,
@@ -141,4 +134,4 @@ class DatasetDNeighbors(torch.utils.data.Dataset):
         return item
 
     def __len__(self):
-        return self.seen_trn_X_Y.shape[0]
+        return self.Y_trn.shape[0]
