@@ -1,9 +1,9 @@
-__dependency__: configs/base_config.yaml, configs/LF-WikiHierarchy-550K_10/dataset.yaml
-expname: meta_clf_gen_cl_193_st_10
+__dependency__: configs/base_config.yaml, configs/LF-AmazonTitles-1.3M_10/dataset.yaml
+expname: meta_clf_gen_cl_272_st_10
 desc: "Training Meta-Classifier Genearator (MCG)"
 
 # Base Encoder
-base_retriever: "NGAME"
+base_retriever: "DPR"
 
 # Combiner parameters
 num_neighbors: 3
@@ -13,12 +13,12 @@ num_heads: 4
 # Negative Mining parameters:
 num_negatives: 10
 cl_start_ep: 10
-cl_start_size: 193
+cl_start_size: 272
 curr_steps: ""
 cl_update: 5
 
 # Training Parameters
 num_epochs: 40
 batch_size: 2048
-margin: 0.1
+margin: 0.3
 lr: 0.0002

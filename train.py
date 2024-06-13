@@ -309,8 +309,9 @@ def train(
         print(loss_log)
         wandb.log({"loss": np.mean(loss_history), "epoch": epoch})
 
-        if epoch == args.cl_start_ep:
-            args.cl_size = args.cl_start_size
+        if epoch >= args.cl_start_ep:
+            if epoch == args.cl_start_ep:
+                args.cl_size = args.cl_start_size
             if (
                 ((epoch - args.cl_start_ep) % args.cl_update == 0)
                 or (epoch == args.cl_start_ep)
@@ -371,7 +372,7 @@ def init_classifiers_embedds(args, net):
 
 def main():
     wandb.init(
-        project=f"{args.project}_{args.dataset}", name=f"{args.base_retriever}_{args.expname}", save_code=True
+        project=f"{args.project}_{args.dataset}", name=f"{args.base_retriever}_{args.expname}", save_code=True, entity="dl-based-xml"
     )
 
     args.device = torch.device(args.device)
@@ -381,11 +382,11 @@ def main():
         f"Results/{args.project}/{args.dataset}/{args.base_retriever}/{args.expname}"
     )
 
+    os.makedirs(args.OUT_DIR, exist_ok=True)
+    
     args.log_filepath = f"{args.OUT_DIR}/log.txt"
     with open(args.log_filepath, "w") as f:
         pass
-
-    os.makedirs(args.OUT_DIR, exist_ok=True)
 
     # Get GPU clustering devices
     if args.cls_devices == "":

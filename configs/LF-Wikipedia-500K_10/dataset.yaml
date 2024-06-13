@@ -1,0 +1,2 @@
+dataset: LF-Wikipedia-500K_10
+tf_max_len: 256

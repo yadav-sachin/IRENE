@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from sklearn.preprocessing import normalize
 
 
 def clip_batch_lengths(ind, mask, max_len):
@@ -96,7 +97,7 @@ class DatasetDNeighbors(torch.utils.data.Dataset):
         super().__init__()
         self.Y_trn = Y_trn
 
-        self.trn_doc_embeddings = trn_doc_embeddings
+        self.trn_doc_embeddings = normalize(trn_doc_embeddings)
 
         self.Y_trn_neighbor_indices = Y_trn_neighbor_indices
         self.Y_trn_neighbor_scores = Y_trn_neighbor_scores
