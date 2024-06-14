@@ -422,10 +422,10 @@ def main():
     )[:, : args.num_neighbors]
 
     if not args.neighbor_itself:
-        args.trn_neighbors_indices = np.load(
+        args.Y_trn_neighbor_indices = np.load(
             f"{args.DATA_ASSETS_DIR}/{args.Y_trn_neighbor_indices_filename}"
         )[:, 1 : args.num_neighbors + 1]
-        args.trn_neighbors_scores = np.load(
+        args.Y_trn_neighbor_scores = np.load(
             f"{args.DATA_ASSETS_DIR}/{args.Y_trn_neighbor_scores_filename}"
         )[:, 1 : args.num_neighbors + 1]
 
