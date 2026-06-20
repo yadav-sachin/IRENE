@@ -5,7 +5,7 @@ desc: "Training Meta-Classifier Genearator (MCG)" # Short description of the exp
 
 # Default Combiner Parameters
 num_neighbors: 3
-num_encoder_layers: 1
+num_layers: 1
 num_heads: 4
 dropout: 0.1
 dim: 768

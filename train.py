@@ -372,7 +372,7 @@ def init_classifiers_embedds(args, net):
 
 def main():
     wandb.init(
-        project=f"{args.project}_{args.dataset}", name=f"{args.base_retriever}_{args.expname}", save_code=True, entity="dl-based-xml"
+        project=f"{args.project}_{args.dataset}", name=f"{args.base_retriever}_{args.expname}", save_code=True,
     )
 
     args.device = torch.device(args.device)
@@ -411,23 +411,21 @@ def main():
 
     criterion = prepare_loss(args, margin=args.margin, num_negatives=args.num_negatives)
 
+    # ANNS returns the label itself as the nearest neighbor (index 0).
+    # neighbor_itself=False skips it during training, matching test-time behaviour
+    # where novel labels cannot appear in their own seen-label neighbourhood.
+    col_start = 0 if args.neighbor_itself else 1
+    col_slice = slice(col_start, col_start + args.num_neighbors)
+
     args.Y_trn_neighbor_indices = np.load(
         f"{args.DATA_ASSETS_DIR}/{args.Y_trn_neighbor_indices_filename}"
-    )[:, : args.num_neighbors]
+    )[:, col_slice]
     args.Y_trn_neighbor_scores = np.load(
         f"{args.DATA_ASSETS_DIR}/{args.Y_trn_neighbor_scores_filename}"
-    )[:, : args.num_neighbors]
+    )[:, col_slice]
     args.Y_zero_neighbor_indices = np.load(
         f"{args.DATA_ASSETS_DIR}/{args.Y_zero_neighbor_indices_filename}"
     )[:, : args.num_neighbors]
-
-    if not args.neighbor_itself:
-        args.Y_trn_neighbor_indices = np.load(
-            f"{args.DATA_ASSETS_DIR}/{args.Y_trn_neighbor_indices_filename}"
-        )[:, 1 : args.num_neighbors + 1]
-        args.Y_trn_neighbor_scores = np.load(
-            f"{args.DATA_ASSETS_DIR}/{args.Y_trn_neighbor_scores_filename}"
-        )[:, 1 : args.num_neighbors + 1]
 
     args.num_trn_lbls = args.Y_trn.shape[1]
 

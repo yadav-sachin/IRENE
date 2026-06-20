@@ -80,9 +80,11 @@ Dataset_Assets/
     │
     │   # k-NN neighbors in seen label space (computed via ANNS over Y_trn_unnorm)
     ├── Y_trn_neighbor_indices.npy    #  seen label → seen neighbors     [L_seen  × K_max]
-    ├── Y_trn_neighbor_scores.npy     #  corresponding cosine scores     [L_seen  × K_max]
+    ├── Y_trn_neighbor_scores.npy     #  neighbor cosine similarities    [L_seen  × K_max]  (int, 0–10)
     └── Y_zero_neighbor_indices.npy   #  novel label → seen neighbors    [L_novel × K_max]
 ```
+
+> **Note on neighbor scores:** The cosine similarity between a label and each of its k-NN neighbors is discretized into an integer in [0, 10] and stored in `Y_trn_neighbor_scores.npy`. IRENE maps these integers to learned `ScoreEmbeddings` that are added to each neighbor's classifier before it enters the Transformer, giving the model a proximity-aware signal over the neighborhood. Novel label neighbors (`Y_zero`) are not scored — a uniform score of 1 is used at inference.
 
 ---
 
@@ -131,6 +133,7 @@ The two most important IRENE-specific hyperparameters, validated through ablatio
 |-----------|---------|-------|
 | `num_neighbors` (K) | 3 | Smaller K yields tighter generalization bound and better empirical performance; K=3 works well across all datasets |
 | `num_layers` (D) | 1 | One Transformer layer is sufficient; deeper G tends to overfit |
+| `neighbor_itself` | `False` | Whether a seen label attends to itself during training. Must be `False`: at test time, novel labels are absent from the seen label space and can never be their own neighbor, so including self-attention during training would create a train/test mismatch |
 
 ---
 
