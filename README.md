@@ -143,7 +143,7 @@ python train.py configs/LF-AmazonTitles-1.3M_10/meta_clf_gen.yaml
 python train.py configs/LF-Wikipedia-500K_10/meta_clf_gen.yaml
 ```
 
-**Multi-GPU clustering:**
+**Multi-GPU clustering:** shards the periodic hard-negative clustering across GPUs to speed up training on large datasets.
 ```bash
 python train.py configs/${dataset}/meta_clf_gen.yaml --cls_devices "0,1,2,3"
 ```
