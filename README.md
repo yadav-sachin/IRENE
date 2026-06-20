@@ -125,6 +125,22 @@ python train.py configs/LF-Wikipedia-500K_10/meta_clf_gen.yaml
 python train.py configs/${dataset}/meta_clf_gen.yaml --cls_devices "0,1,2,3"
 ```
 
+### Outputs
+
+Training writes to `Results/<project>/<dataset>/<base_retriever>/<expname>/`:
+
+```
+Results/
+└── <project>/<dataset>/<base_retriever>/<expname>/
+    ├── log.txt                            # loss and metrics at each eval epoch
+    ├── state_dict_ep_-1.pt               # checkpoint before training
+    ├── state_dict_ep_{0,10,20,30,39}.pt  # checkpoint at each eval epoch
+    ├── state_dict.pt                     # final checkpoint
+    └── embeddings/
+        ├── Y_zero_{epoch}.irene.npy      # IRENE label representations for novel labels
+        └── Y_full_{epoch}.irene.npy      # IRENE label representations for all labels
+```
+
 ### Key Hyperparameters
 
 The two most important IRENE-specific hyperparameters, validated through ablations (Table 4 in the paper):
