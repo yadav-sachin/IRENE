@@ -255,7 +255,7 @@ IRENE/
 If you find this work useful, please cite:
 
 ```bibtex
-@inproceedings{10.1145/3637528.3672046,
+@inproceedings{yadav2024extrememetaclassification,
   author    = {Yadav, Sachin and Saini, Deepak and Buvanesh, Anirudh and Paliwal, Bhawna
                and Dahiya, Kunal and Asokan, Siddarth and Prabhu, Yashoteja
                and Jiao, Jian and Varma, Manik},
