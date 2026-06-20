@@ -51,28 +51,37 @@ The (query, label) pairs in each split come directly from the original dataset's
 
 ### Directory Structure
 
-Training requires precomputed embeddings and classifiers from a base extreme classifier. Organize files as:
+Training requires precomputed embeddings and classifiers from a base extreme classifier. All embeddings must be in **un-normalized** form — IRENE applies normalization internally. Organize files as:
 
 ```
 Datasets/
 └── <Dataset>/
-    ├── Y.trn.npz                           # train relevance matrix       [N_trn × L_seen]
-    ├── Y.tst_zero.npz                      # zero-shot test relevance     [N_tst × L_zero]
-    ├── Y.tst_full.npz                      # generalized zero-shot        [N_tst × (L_seen + L_zero)]
+    ├── Y.trn.npz                     # train relevance matrix           [N_trn   × L_seen]
+    ├── Y.tst_zero.npz                # zero-shot test relevance         [N_zero  × L_novel]
+    ├── Y.tst_full.npz                # generalized test relevance       [N_test  × L_all]
     ├── filter_labels_test_zero.txt
     └── filter_labels_test_full.txt
 
 Dataset_Assets/
 └── <Dataset>/<Base Retriever>/
-    ├── trn_X_unnorm.npy                    # train doc embeddings         [N_trn × D]
-    ├── tst_X_zero_unnorm.npy               # zero-shot test embeddings    [N_tst × D]
-    ├── tst_X_full_unnorm.npy               # full test embeddings         [N_tst × D]
-    ├── Y_trn_unnorm.npy                    # seen label embeddings        [L_seen × D]
-    ├── Y_zero_unnorm.npy                   # zero-shot label embeddings   [L_zero × D]
-    ├── Y_full_unnorm.npy                   # all label embeddings         [(L_seen + L_zero) × D]
-    ├── Y_trn_classifiers_unnorm.npy        # seen label classifiers       [L_seen × D]
-    ├── Y_trn_neighbor_indices.npy          # k-NN label indices           [L_seen × K_max]
-    └── Y_trn_neighbor_scores.npy           # k-NN label scores            [L_seen × K_max]
+    │
+    │   # Query embeddings (un-normalized)
+    ├── trn_X_unnorm.npy              #  train queries                   [N_trn   × D]
+    ├── tst_X_zero_unnorm.npy         #  zero-shot test queries          [N_zero  × D]
+    ├── tst_X_full_unnorm.npy         #  generalized test queries        [N_test  × D]
+    │
+    │   # Label embeddings (un-normalized)
+    ├── Y_trn_unnorm.npy              #  seen labels                     [L_seen  × D]
+    ├── Y_zero_unnorm.npy             #  novel labels                    [L_novel × D]
+    ├── Y_full_unnorm.npy             #  all labels  = concat(trn, zero) [L_all   × D]
+    │
+    │   # Per-label classifiers from base retriever (un-normalized)
+    ├── Y_trn_classifiers_unnorm.npy  #  seen label classifiers          [L_seen  × D]
+    │
+    │   # k-NN neighbors in seen label space (computed via ANNS over Y_trn_unnorm)
+    ├── Y_trn_neighbor_indices.npy    #  seen label → seen neighbors     [L_seen  × K_max]
+    ├── Y_trn_neighbor_scores.npy     #  corresponding cosine scores     [L_seen  × K_max]
+    └── Y_zero_neighbor_indices.npy   #  novel label → seen neighbors    [L_novel × K_max]
 ```
 
 ---
