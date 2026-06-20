@@ -6,6 +6,7 @@
 [![KDD 2024](https://img.shields.io/badge/Venue-KDD%202024-blue)](https://dl.acm.org/doi/10.1145/3637528.3672046)
 [![Paper](https://img.shields.io/badge/Paper-PDF-red)](http://manikvarma.org/pubs/yadav24.pdf)
 [![Supplementary](https://img.shields.io/badge/Supplementary-PDF-orange)](https://www.siddarthasokan.com/assets/pdf/EMMETT_IRENE24_Supp.pdf)
+[![Patent](https://img.shields.io/badge/Patent-US12499168B2-green)](https://patents.google.com/patent/US12499168B2)
 
 Official implementation of **"Extreme Meta-Classification for Large-Scale Zero-Shot Retrieval"** (KDD 2024).
 
@@ -13,10 +14,14 @@ Official implementation of **"Extreme Meta-Classification for Large-Scale Zero-S
 
 ## Overview
 
-**EMMETT** is the general algorithmic framework introduced in this paper for synthesizing classifiers on-the-fly for novel (zero-shot) items, by leveraging classifiers already learned for observed items during training. **IRENE** is a simple and scalable instance of EMMETT, comprising two components:
+Extreme classification (XC) involves retrieving the most relevant labels from millions of candidates given a query. A central challenge in deployed XC systems is **zero-shot retrieval** — matching queries to *novel* labels that were absent during training and therefore lack learned classifiers or interaction data. This arises constantly in practice: new products, emerging search keywords, and breaking-news topics are streamed into retrieval systems faster than annotations can be collected.
+
+**EMMETT** is the general algorithmic framework introduced in this paper for synthesizing classifiers on-the-fly for novel (zero-shot) labels, by leveraging classifiers already learned for observed (seen) labels during training. **IRENE** is a simple and scalable instance of EMMETT, comprising two components:
 
 - **Classifier Selector (S):** Retrieves *K* nearest neighbor labels from the seen set for a given novel label, using an ANNS index over label embeddings.
-- **Meta-Classifier Generator (G):** A Transformer encoder that takes the novel label's embedding and the classifiers of its *K* neighbors as input, and produces a meta-classifier for retrieval.
+- **Meta-Classifier Generator (G):** A Transformer encoder that takes the novel label's embedding and the classifiers of its *K* neighbors as input, and produces a synthesized meta-classifier for retrieval.
+
+The key insight is that seen-label classifiers encode rich collaborative signals — patterns of co-relevance across queries — that are absent from a text embedding alone. By combining a novel label's text embedding with the classifiers of its seen neighbors, IRENE produces a representation that captures both semantic similarity and collaborative structure, without retraining the base model.
 
 IRENE is plug-and-play atop any dense retriever and improves P@1 by **+10.1%** and R@10 by **+11.9%** on average across datasets in the zero-shot setting.
 
@@ -241,3 +246,14 @@ If you find this work useful, please cite:
   doi       = {10.1145/3637528.3672046}
 }
 ```
+
+---
+
+## Patent
+
+The EMMETT/IRENE methodology is protected by a granted US patent:
+
+**[Retrieval of Novel Keywords for Search](https://patents.google.com/patent/US12499168B2)**  
+US Patent No. **US12499168B2** · Granted December 2025  
+Inventors: Deepak Saini, Jian Jiao, Sachin Yadav, Bhawna Paliwal, Anirudh Buvanesh, Manik Varma  
+Assignee: Microsoft Technology Licensing LLC
