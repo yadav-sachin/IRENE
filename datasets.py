@@ -69,7 +69,7 @@ def collate_fn_neighbors(batch):
     batch_data["indices"] = torch.LongTensor([item["index"] for item in batch])
     batch_data["lbl_indices"] = torch.from_numpy(pos_ind)
     batch_data["neighbors_indices"] = torch.from_numpy(neighbors_indices)
-    batch_data["neighbors_scores"] = torch.from_numpy(neighbors_scores)
+    batch_data["neighbors_scores"] = torch.from_numpy(neighbors_scores).long()
     batch_data["self_and_neighbors_mask"] = torch.from_numpy(
         self_and_neighbors_attention_mask
     ).bool()

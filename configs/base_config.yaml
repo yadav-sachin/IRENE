@@ -37,6 +37,10 @@ Y_zero_unnorm_embeddings_filename: "Y_zero_unnorm.npy"
 Y_trn_unnorm_embeddings_filename: "Y_trn_unnorm.npy"
 Y_trn_unnorm_classifiers_filename: "Y_trn_classifiers_unnorm.npy"
 
+# Curriculum scheduling — comma-separated epoch numbers at which cluster size doubles
+# (empty string disables curriculum size stepping)
+curr_steps: ""
+
 # About Neighbors
 neighbor_itself: False # When combining for train labels, don't use its own classifier
 

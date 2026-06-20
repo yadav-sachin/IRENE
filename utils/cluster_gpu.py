@@ -1,17 +1,10 @@
-import functools
-import torch
 import time
-import operator
-import numpy as np
-from scipy.sparse import csr_matrix
-import torch.nn.functional as F
-from multiprocessing import Pool
-from typing import Iterator, Optional, Sequence, List, TypeVar, Generic, Sized
-from torch.utils.data import Sampler
-import torch.multiprocessing as mp
-import gc
 import pickle
-import functools
+import numpy as np
+import torch
+import torch.nn.functional as F
+import torch.multiprocessing as mp
+from multiprocessing import Pool
 from colorama import Fore, Style
 import colorama
 
@@ -38,7 +31,7 @@ def multi_gpu_mm(a_chunks, bs):
 
     return ret
 
-def split_cluster(labels_features, indices, devices=None, metric='cosine', tol=1e-4, leakage=None):
+def split_cluster(labels_features, indices, devices=None, tol=1e-4):
     """
     If devices is not None, split label_features on devices to calculate similarity
     """
@@ -97,25 +90,6 @@ def balanced_cluster_gpu(return_dict, rank, embs, num_levels, device, verbose):
 
     return_dict[rank] = [cluster.cpu().numpy() for cluster in clusters]
 
-def balanced_cluster_gpu_dist(return_dict, rank, embs, num_levels, device, verbose):
-    embs = embs.to(device)
-    m = embs.shape[0]
-    clusters = [torch.arange(m)]
-    for t in range(num_levels):
-        start = time.time()
-        multi_pool = Pool(processes=5)
-        ret = multi_pool.starmap(split_cluster, [(embs[cluster], cluster) for cluster in clusters])
-        multi_pool.close() 
-        multi_pool.join()
-        end = time.time()
-        clusters = [x for subl in ret for x in subl]
-        if(verbose):
-            print(f"rank={rank} => Total clusters {len(clusters)}\tAvg. Cluster size {'%.2f'%(np.mean([len(x) for x in clusters]))}\tTime to split nodes on this level {'%.2f'%(end-start)} sec")
-
-    del embs
-    torch.cuda.empty_cache()
-
-    return_dict[rank] = clusters
 
 def is_power_of_two(n):
     return (n != 0) and (n & (n-1) == 0)
