@@ -168,7 +168,7 @@ def cluster_items(X, depth, n_threads):
     n_clusters = 2 ** (depth - 1)
     clusters, _ = cluster_balance(
         X=X.copy(),
-        clusters=[np.arange(len(X), dtype=np.int)],
+        clusters=[np.arange(len(X), dtype=int)],
         num_clusters=n_clusters,
         splitter=b_kmeans_dense,
         num_threads=n_threads,

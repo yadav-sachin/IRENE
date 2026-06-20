@@ -23,7 +23,6 @@ def _multi_gpu_mm(return_dict, rank, a, b):
     return_dict[rank] = torch.mm(a, b).cpu()
 
 def multi_gpu_mm(a_chunks, bs):
-    print("---inside multi_gpu_mm")
     processes = []
     manager = mp.Manager()
     return_dict = manager.dict()
@@ -210,11 +209,22 @@ def balanced_cluster(embs, num_levels, devices, num_random_clusters=-1, verbose=
     return final_clusters
 
 if __name__ == "__main__":
+    import argparse
+
     mp.set_start_method('spawn')
 
-    embs = torch.FloatTensor(np.load("/data/desaini/Research/OnlineGCN/v2/RewriteModel/Index1/TopSRPV500MQueriesEmbs.npy"))
-    print(embs.shape)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--embeddings", required=True, help="Path to embeddings .npy file")
+    parser.add_argument("--output", required=True, help="Path to save clusters .pkl file")
+    parser.add_argument("--depth", type=int, default=27, help="Tree depth for clustering")
+    parser.add_argument("--devices", type=int, nargs="+", default=[0], help="GPU device IDs")
+    parser.add_argument("--num_random_clusters", type=int, default=-1)
+    args = parser.parse_args()
 
-    clusters = balanced_cluster(embs, 27, [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], 32, True)
-    with open("/data/desaini/Research/OnlineGCN/v2/RewriteModel/Index1/Clusters_27Depth.pkl", "wb") as fout:
+    embs = torch.FloatTensor(np.load(args.embeddings))
+    print(f"Embeddings shape: {embs.shape}")
+
+    clusters = balanced_cluster(embs, args.depth, args.devices, args.num_random_clusters, True)
+    with open(args.output, "wb") as fout:
         pickle.dump(clusters, fout)
+    print(f"Saved {len(clusters)} clusters to {args.output}")

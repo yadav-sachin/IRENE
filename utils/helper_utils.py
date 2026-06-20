@@ -1,13 +1,6 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 import os, sys, yaml, argparse, re
 import numpy as np
-import scipy.sparse as sp
 import pandas as pd
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-from scipy.sparse import csr_matrix
 
 np.random.seed(22)
 

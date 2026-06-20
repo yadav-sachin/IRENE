@@ -3,12 +3,12 @@ expname: meta_clf_gen_cl_272_st_10
 desc: "Training Meta-Classifier Genearator (MCG)"
 
 # Base Encoder
-base_retriever: "DPR"
+base_retriever: "NGAME"
 
 # Combiner parameters
-num_neighbors: 3
 num_layers: 1
 num_heads: 4
+num_neighbors: 6
 
 # Negative Mining parameters:
 num_negatives: 10

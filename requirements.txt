@@ -1,0 +1,12 @@
+torch>=1.12.0
+transformers>=4.20.0
+wandb
+scipy
+numpy
+tqdm
+xclib
+numba
+hnswlib
+scikit-learn
+pandas
+colorama

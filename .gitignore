@@ -1,9 +1,41 @@
-.ipynb_checkpoints/
+# Python
 __pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
 ipynb/
+
+# Data and model outputs (large files — not tracked in git)
 Datasets/
 Dataset_Assets/
 Results/
+
+# Experiment tracking
 wandb/
-**/__pycache__
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Misc
 misc/
+.env
+
+# Claude Code
+.claude/
+
+# PDFs
+*.pdf

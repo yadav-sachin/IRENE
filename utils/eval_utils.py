@@ -22,9 +22,6 @@ from tqdm import tqdm
 
 from xclib.data import data_utils
 
-np.int = int
-np.float = float
-np.bool = bool
 
 
 def timeit(func):
@@ -103,7 +100,7 @@ def get_irene_lbl_representations(
 def get_filter_map(fname):
     """Load filter file as numpy array"""
     if fname is not None and fname != "":
-        return np.loadtxt(fname).astype(np.int)
+        return np.loadtxt(fname).astype(int)
     else:
         return None
 

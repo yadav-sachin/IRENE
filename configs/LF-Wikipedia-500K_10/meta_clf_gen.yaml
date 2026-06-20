@@ -1,14 +1,14 @@
 __dependency__: configs/base_config.yaml, configs/LF-Wikipedia-500K_10/dataset.yaml
-expname: meta_clf_cluster_218_st_10
+expname: meta_clf_cluster_218_st_10_d_1_k_3
 desc: "Training Meta-Classifier Genearator (MCG)"
 
 # Base Encoder
 base_retriever: "NGAME"
 
 # Combiner parameters
-num_neighbors: 3
 num_layers: 1
 num_heads: 4
+num_neighbors: 3
 
 # Negative Mining parameters:
 num_negatives: 10
