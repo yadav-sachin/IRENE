@@ -5,6 +5,7 @@
 
 [![KDD 2024](https://img.shields.io/badge/Venue-KDD%202024-blue)](https://dl.acm.org/doi/10.1145/3637528.3672046)
 [![Paper](https://img.shields.io/badge/Paper-PDF-red)](http://manikvarma.org/pubs/yadav24.pdf)
+[![Supplementary](https://img.shields.io/badge/Supplementary-PDF-orange)](https://www.siddarthasokan.com/assets/pdf/EMMETT_IRENE24_Supp.pdf)
 
 Official implementation of **"Extreme Meta-Classification for Large-Scale Zero-Shot Retrieval"** (KDD 2024).
 
@@ -175,7 +176,7 @@ Datasets are from the [Extreme Classification Repository](http://manikvarma.org/
   </tbody>
 </table>
 
-> Full results (P@1, P@3, P@5, R@3, R@5, R@10, R@30, R@100) are in Tables 14–15 of the supplementary document.
+> Full results (P@1, P@3, P@5, R@3, R@5, R@10, R@30, R@100) are in Tables 14–15 of the [supplementary document](https://www.siddarthasokan.com/assets/pdf/EMMETT_IRENE24_Supp.pdf).
 
 ---
 
