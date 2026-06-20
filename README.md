@@ -1,47 +1,23 @@
 <img src="media/KDD_logo.png" height="80" align="right"/>
+<img src="media/microsoft_logo.png" height="80" align="right"/>
 
 # IRENE: Extreme Meta-Classification for Large-Scale Zero-Shot Retrieval
 
-[![KDD 2024](https://img.shields.io/badge/Venue-KDD%202024-blue)](https://dl.acm.org/doi/10.1145/3637528.3671843)
+[![KDD 2024](https://img.shields.io/badge/Venue-KDD%202024-blue)](https://dl.acm.org/doi/10.1145/3637528.3672046)
 [![Paper](https://img.shields.io/badge/Paper-PDF-red)](http://manikvarma.org/pubs/yadav24.pdf)
 
-Official PyTorch implementation of **"Extreme Meta-Classification for Large-Scale Zero-Shot Retrieval"** (KDD 2024).
-
-> **Authors:** Sachin Yadav, Deepak Saini, Anirudh Buvanesh, Bhawna Paliwal, Kunal Dahiya, Siddarth Asokan, Yashoteja Prabhu, Jian Jiao, Manik Varma
-> Microsoft Research, India | Microsoft, USA | IIT Delhi, India
+Official implementation of **"Extreme Meta-Classification for Large-Scale Zero-Shot Retrieval"** (KDD 2024).
 
 ---
 
 ## Overview
 
-**Problem:** Large-scale retrieval settings face a fundamental challenge when novel (zero-shot) items arrive continuously — existing Extreme Classification (XC) classifiers cannot be trained for unseen items due to data and latency constraints, while Siamese encoders lack the representational capacity of discriminative classifiers.
+**EMMETT** is the general algorithmic framework introduced in this paper for synthesizing classifiers on-the-fly for novel (zero-shot) items, by leveraging classifiers already learned for observed items during training. **IRENE** is a simple and scalable instance of EMMETT, comprising two components:
 
-**EMMETT** (Extreme Meta-classification for METa-classifiers Training) is the general algorithmic framework introduced in this paper to bridge this gap. EMMETT efficiently trains meta-classifiers for novel items by leveraging the classifiers already learned for observed items.
+- **Classifier Selector (S):** Retrieves *K* nearest neighbor labels from the seen set for a given novel label, using an ANNS index over label embeddings.
+- **Meta-Classifier Generator (G):** A Transformer encoder that takes the novel label's embedding and the classifiers of its *K* neighbors as input, and produces a meta-classifier for retrieval.
 
-**IRENE** is the practical instantiation of EMMETT, comprising two components:
-
-- **Classifier Selector (S):** Given a novel item's embedding, retrieves its *K* nearest neighbor labels from the seen training set using an ANNS index over label embeddings.
-- **Meta-Classifier Generator (G):** A lightweight Transformer encoder that takes the novel label's embedding and the classifiers of its *K* selected neighbors as input, and outputs a meta-classifier that can be used directly for retrieval.
-
-<p align="center">
-  <img src="media/KDD_logo.png" height="60"/>
-</p>
-
-IRENE is **modular** — it can be plugged on top of any dense retriever (NGAME, ANCE, DPR, MACLR) without any fine-tuning of the base encoder, and adds only **~0.4 ms** of per-item overhead at inference.
-
-On average across datasets and base encoders, IRENE improves P@1 by **+10.1%** and R@10 by **+11.9%** in the zero-shot setting, and P@1 by **+15.5%** and R@10 by **+11.5%** in the generalized zero-shot setting.
-
----
-
-## System Requirements
-
-| Resource | Requirement |
-|----------|-------------|
-| GPU | NVIDIA A100 / V100 (≥ 32 GB VRAM for 1.3M-scale datasets) |
-| RAM | ≥ 64 GB |
-| Python | ≥ 3.8 |
-| PyTorch | ≥ 1.12 |
-| CUDA | ≥ 11.3 |
+IRENE is plug-and-play atop any dense retriever and improves P@1 by **+10.1%** and R@10 by **+11.9%** on average across datasets in the zero-shot setting.
 
 ---
 
@@ -50,51 +26,35 @@ On average across datasets and base encoders, IRENE improves P@1 by **+10.1%** a
 ```bash
 conda create -n irene python=3.8 -y
 conda activate irene
-
-pip install torch==1.12.1+cu113 --extra-index-url https://download.pytorch.org/whl/cu113
 pip install -r requirements.txt
 ```
 
 ---
 
-## Datasets
-
-We evaluate IRENE on four public benchmarks from the [Extreme Classification Repository](http://manikvarma.org/downloads/XC/XMLRepository.html) and an internal sponsored-search dataset. Zero-shot splits were created by randomly partitioning 10% of labels as novel items.
-
-| Dataset | Application | Feature Type | Train Queries | Seen Labels | Novel Labels |
-|---------|-------------|-------------|---------------|-------------|--------------|
-| LF-AOL-270K-10 | Query Completion | Short-Text | 3,689,542 | 245,543 | 27,282 |
-| LF-WikiHierarchy-550K-10 | Taxonomy Completion | Short-Text | 1,587,567 | 494,733 | 54,970 |
-| LF-AmazonTitles-1.3M-10 | Product Recommendation | Short-Text | 2,225,354 | 1,174,739 | 130,526 |
-| LF-Wikipedia-500K-10 | Category Annotation | Long-Text | 1,781,890 | 450,963 | 50,107 |
-
----
-
 ## Data Preparation
 
-Training IRENE requires precomputed embeddings and classifiers from a base extreme classifier (e.g., [NGAME](https://github.com/nilesh2797/NGAME)). Organize the files as follows:
+Training requires precomputed embeddings and classifiers from a base extreme classifier. Organize files as:
 
 ```
 Datasets/
-└── <Dataset>/                              # e.g., LF-AmazonTitles-1.3M_10
-    ├── Y.trn.npz                           # train relevance matrix  [N_trn × L_seen]  (scipy sparse)
-    ├── Y.tst_zero.npz                      # zero-shot test relevance [N_tst × L_zero]  (scipy sparse)
-    ├── Y.tst_full.npz                      # generalized zero-shot   [N_tst × (L_seen + L_zero)]  (scipy sparse)
-    ├── filter_labels_test_zero.txt         # (query, label) pairs to filter in zero-shot eval
-    └── filter_labels_test_full.txt         # (query, label) pairs to filter in generalized eval
+└── <Dataset>/
+    ├── Y.trn.npz                           # train relevance matrix       [N_trn × L_seen]
+    ├── Y.tst_zero.npz                      # zero-shot test relevance     [N_tst × L_zero]
+    ├── Y.tst_full.npz                      # generalized zero-shot        [N_tst × (L_seen + L_zero)]
+    ├── filter_labels_test_zero.txt
+    └── filter_labels_test_full.txt
 
 Dataset_Assets/
-└── <Dataset>/
-    └── <Base Retriever>/                   # e.g., NGAME
-        ├── trn_X_unnorm.npy                # train doc embeddings        [N_trn × D]
-        ├── tst_X_zero_unnorm.npy           # zero-shot test embeddings   [N_tst × D]
-        ├── tst_X_full_unnorm.npy           # full test embeddings        [N_tst × D]
-        ├── Y_trn_unnorm.npy                # seen label embeddings       [L_seen × D]
-        ├── Y_zero_unnorm.npy               # zero-shot label embeddings  [L_zero × D]
-        ├── Y_full_unnorm.npy               # full label embeddings       [(L_seen + L_zero) × D]
-        ├── Y_trn_classifiers_unnorm.npy    # seen label classifiers      [L_seen × D]
-        ├── Y_trn_neighbor_indices.npy      # k-NN label indices          [L_seen × K_max]
-        └── Y_trn_neighbor_scores.npy       # k-NN label scores           [L_seen × K_max]
+└── <Dataset>/<Base Retriever>/
+    ├── trn_X_unnorm.npy                    # train doc embeddings         [N_trn × D]
+    ├── tst_X_zero_unnorm.npy               # zero-shot test embeddings    [N_tst × D]
+    ├── tst_X_full_unnorm.npy               # full test embeddings         [N_tst × D]
+    ├── Y_trn_unnorm.npy                    # seen label embeddings        [L_seen × D]
+    ├── Y_zero_unnorm.npy                   # zero-shot label embeddings   [L_zero × D]
+    ├── Y_full_unnorm.npy                   # all label embeddings         [(L_seen + L_zero) × D]
+    ├── Y_trn_classifiers_unnorm.npy        # seen label classifiers       [L_seen × D]
+    ├── Y_trn_neighbor_indices.npy          # k-NN label indices           [L_seen × K_max]
+    └── Y_trn_neighbor_scores.npy           # k-NN label scores            [L_seen × K_max]
 ```
 
 ---
@@ -103,150 +63,119 @@ Dataset_Assets/
 
 ### Step 1 — Train Base XC Classifier
 
-Train a base encoder with one-vs-all BCE loss (e.g., using [NGAME](https://github.com/nilesh2797/NGAME) or [Renée](https://github.com/nilesh2797/Renee)) on the **seen** labels to obtain per-label embeddings and classifiers. Then compute k-NN neighbor indices and scores in label embedding space using an ANNS library (e.g., [DiskANN](https://github.com/microsoft/DiskANN)).
+Train a base encoder on the seen labels using a one-vs-all BCE loss to produce per-label embeddings and classifiers, then compute k-NN neighbors in label space. Base classifiers used in this work:
 
-Place all outputs under `Dataset_Assets/<Dataset>/<Base Retriever>/` as shown above.
+| Encoder | Reference |
+|---------|-----------|
+| [NGAME](https://github.com/Extreme-classification/NGAME) | Dahiya et al., WSDM 2023 |
+| [ANCE](https://github.com/microsoft/ANCE) | Xiong et al., ICLR 2021 |
+| [DPR](https://github.com/facebookresearch/DPR) | Karpukhin et al., EMNLP 2020 |
+| MACLR | Xiong et al., arXiv 2021 |
 
-### Step 2 — Train IRENE (Meta-Classifier Generator)
+Place outputs under `Dataset_Assets/<Dataset>/<Base Retriever>/` as above.
 
-IRENE's meta-classifier generator **G** is a single Transformer encoder layer that combines:
-- The **embedding** of the novel label (from the base encoder)
-- The **classifiers** of its *K* nearest neighbor seen labels (retrieved by **S**)
-- **Score embeddings** encoding the similarity of each neighbor
-- **Positional embeddings** distinguishing the target label from its neighbors
+### Step 2 — Train IRENE
 
-Training is fully driven by YAML config files. See `configs/<Dataset>/meta_clf_gen.yaml` for all hyperparameters and `configs/base_config.yaml` for shared defaults.
+Training is driven by YAML configs. See [`configs/base_config.yaml`](configs/base_config.yaml) for all parameters and [`configs/<Dataset>/meta_clf_gen.yaml`](configs/LF-AmazonTitles-1.3M_10/meta_clf_gen.yaml) for dataset-specific settings.
 
 ```bash
 dataset="LF-WikiHierarchy-550K_10"
-
 python train.py configs/${dataset}/meta_clf_gen.yaml
 ```
 
-**Override any parameter at the command line:**
+**All datasets:**
 ```bash
-python train.py configs/${dataset}/meta_clf_gen.yaml \
-    --num_neighbors 3 \
-    --num_layers 1 \
-    --device cuda:0
+python train.py configs/LF-AOL-270K_10/meta_clf_gen.yaml
+python train.py configs/LF-WikiHierarchy-550K_10/meta_clf_gen.yaml
+python train.py configs/LF-AmazonTitles-1.3M_10/meta_clf_gen.yaml
+python train.py configs/LF-Wikipedia-500K_10/meta_clf_gen.yaml
 ```
 
-**Multi-GPU balanced clustering** (set `cls_devices` to a comma-separated list of GPU IDs):
+**Multi-GPU clustering:**
 ```bash
 python train.py configs/${dataset}/meta_clf_gen.yaml --cls_devices "0,1,2,3"
 ```
 
-**Disable W&B logging:**
-```bash
-WANDB_MODE=disabled python train.py configs/${dataset}/meta_clf_gen.yaml
-```
+### Key Hyperparameters
 
-### Training Details (from Appendix C)
+The two most important IRENE-specific hyperparameters, validated through ablations (Table 4 in the paper):
 
-| Hyperparameter | Value | Description |
-|----------------|-------|-------------|
-| `num_neighbors` (K) | 3 | Neighbor classifiers fed to G |
-| `num_layers` (D) | 1 | Transformer encoder depth in G |
-| `num_heads` | 4 | Attention heads in G |
-| `dim` | 768 | Embedding dimension |
-| `dropout` | 0.1 | Dropout rate |
-| `batch_size` | 2048 | Training batch size |
-| `lr` | 2e-4 | Peak learning rate (linear warmup, 500 steps) |
-| `num_epochs` | 40 | Total epochs |
-| `margin` | 0.3 / 0.1 / 0.2 | BCE margin (AOL & Amazon / WikiHierarchy / Wikipedia) |
-| `cl_start_ep` | 10 | Epoch to begin curriculum clustering |
-| `cl_update` | 5 | Cluster refresh interval (epochs) |
-
-Training IRENE on LF-AmazonTitles-1.3M-10 atop NGAME takes ~**6 hours** on a single V100 GPU (vs. 83 hours for NGAME itself).
-
-### Dataset-Specific Commands
-
-```bash
-# LF-AOL-270K_10
-python train.py configs/LF-AOL-270K_10/meta_clf_gen.yaml
-
-# LF-WikiHierarchy-550K_10
-python train.py configs/LF-WikiHierarchy-550K_10/meta_clf_gen.yaml
-
-# LF-AmazonTitles-1.3M_10
-python train.py configs/LF-AmazonTitles-1.3M_10/meta_clf_gen.yaml
-
-# LF-Wikipedia-500K_10
-python train.py configs/LF-Wikipedia-500K_10/meta_clf_gen.yaml
-```
+| Parameter | Default | Notes |
+|-----------|---------|-------|
+| `num_neighbors` (K) | 3 | Smaller K yields tighter generalization bound and better empirical performance; K=3 works well across all datasets |
+| `num_layers` (D) | 1 | One Transformer layer is sufficient; deeper G tends to overfit |
 
 ---
 
 ## Results
 
-Metrics: **P@k** (Precision@k), **R@k** (Recall@k). Best in each encoder pair shown in **bold** in the paper.
+Datasets are from the [Extreme Classification Repository](http://manikvarma.org/downloads/XC/XMLRepository.html), with a 90/10 seen/novel split of labels. Metrics: **P@1** and **R@10**.
 
-### Zero-Shot Retrieval (Novel Labels Only)
+### Zero-Shot Retrieval
 
-| Model | LF-AOL-270K | LF-WikiHierarchy-550K | LF-AmazonTitles-1.3M | LF-Wikipedia-500K |
-|-------|:-----------:|:---------------------:|:--------------------:|:-----------------:|
-| | P@1 / R@10 | P@1 / R@10 | P@1 / R@10 | P@1 / R@10 |
-| NGAME | 30.90 / 54.20 | 46.01 / 58.66 | 30.42 / 36.44 | 46.96 / 65.27 |
-| **NGAME + IRENE** | **36.47 / 59.57** | **69.29 / 80.40** | **31.56 / 38.83** | 44.91 / 67.79 |
-| ANCE | 33.43 / 67.84 | 43.06 / 56.28 | 22.38 / 30.72 | 30.67 / 58.91 |
-| **ANCE + IRENE** | **36.84 / 67.82** | **66.54 / 82.10** | **22.75 / 32.72** | **41.59 / 71.59** |
-| DPR | 30.38 / 53.82 | 44.84 / 59.29 | 31.10 / 40.98 | 42.90 / 71.20 |
-| **DPR + IRENE** | **36.80 / 60.22** | **69.65 / 80.01** | 30.49 / 40.31 | 42.19 / 70.50 |
-| MACLR | 11.31 / 18.24 | 30.37 / 35.47 | 21.93 / 28.59 | 39.56 / 68.53 |
-| **MACLR + IRENE** | **34.32 / 61.29** | **69.45 / 81.43** | 21.56 / 28.77 | **44.64 / 73.05** |
-| SemSup-XC | 26.27 / 36.31 | 57.45 / 46.81 | 11.28 / 11.68 | 46.60 / 57.08 |
-| DEXA | 21.68 / 41.85 | 54.83 / 66.89 | 28.83 / 35.19 | 42.76 / 67.37 |
+<table>
+  <thead>
+    <tr>
+      <th rowspan="2">Model</th>
+      <th colspan="2">LF-AOL-270K</th>
+      <th colspan="2">LF-WikiHierarchy-550K</th>
+      <th colspan="2">LF-AmazonTitles-1.3M</th>
+      <th colspan="2">LF-Wikipedia-500K</th>
+    </tr>
+    <tr>
+      <th>P@1</th><th>R@10</th>
+      <th>P@1</th><th>R@10</th>
+      <th>P@1</th><th>R@10</th>
+      <th>P@1</th><th>R@10</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>NGAME</td><td>30.90</td><td>54.20</td><td>46.01</td><td>58.66</td><td>30.42</td><td>36.44</td><td>46.96</td><td>65.27</td></tr>
+    <tr><td><b>NGAME + IRENE</b></td><td><b>36.47</b></td><td><b>59.57</b></td><td><b>69.29</b></td><td><b>80.40</b></td><td><b>31.56</b></td><td><b>38.83</b></td><td>44.91</td><td>67.79</td></tr>
+    <tr><td>ANCE</td><td>33.43</td><td>67.84</td><td>43.06</td><td>56.28</td><td>22.38</td><td>30.72</td><td>30.67</td><td>58.91</td></tr>
+    <tr><td><b>ANCE + IRENE</b></td><td><b>36.84</b></td><td><b>67.82</b></td><td><b>66.54</b></td><td><b>82.10</b></td><td><b>22.75</b></td><td><b>32.72</b></td><td><b>41.59</b></td><td><b>71.59</b></td></tr>
+    <tr><td>DPR</td><td>30.38</td><td>53.82</td><td>44.84</td><td>59.29</td><td>31.10</td><td>40.98</td><td>42.90</td><td>71.20</td></tr>
+    <tr><td><b>DPR + IRENE</b></td><td><b>36.80</b></td><td><b>60.22</b></td><td><b>69.65</b></td><td><b>80.01</b></td><td>30.49</td><td>40.31</td><td>42.19</td><td>70.50</td></tr>
+    <tr><td>MACLR</td><td>11.31</td><td>18.24</td><td>30.37</td><td>35.47</td><td>21.93</td><td>28.59</td><td>39.56</td><td>68.53</td></tr>
+    <tr><td><b>MACLR + IRENE</b></td><td><b>34.32</b></td><td><b>61.29</b></td><td><b>69.45</b></td><td><b>81.43</b></td><td>21.56</td><td>28.77</td><td><b>44.64</b></td><td><b>73.05</b></td></tr>
+    <tr><td>SemSup-XC</td><td>26.27</td><td>36.31</td><td>57.45</td><td>46.81</td><td>11.28</td><td>11.68</td><td>46.60</td><td>57.08</td></tr>
+    <tr><td><a href="https://github.com/Extreme-classification/DEXA">DEXA</a></td><td>21.68</td><td>41.85</td><td>54.83</td><td>66.89</td><td>28.83</td><td>35.19</td><td>42.76</td><td>67.37</td></tr>
+  </tbody>
+</table>
 
-### Generalized Zero-Shot Retrieval (Seen + Novel Labels)
+### Generalized Zero-Shot Retrieval
 
-| Model | LF-AOL-270K | LF-WikiHierarchy-550K | LF-AmazonTitles-1.3M | LF-Wikipedia-500K |
-|-------|:-----------:|:---------------------:|:--------------------:|:-----------------:|
-| | P@1 / R@10 | P@1 / R@10 | P@1 / R@10 | P@1 / R@10 |
-| NGAME | 20.16 / 38.27 | 66.19 / 27.08 | 45.14 / 30.25 | 81.86 / 69.58 |
-| **NGAME + IRENE** | **35.11 / 52.30** | **91.33 / 40.09** | **47.77 / 31.49** | 78.99 / 69.27 |
-| ANCE | 22.63 / 49.72 | 68.76 / 25.89 | 27.65 / 17.31 | 42.91 / 43.39 |
-| **ANCE + IRENE** | **30.84 / 51.75** | **90.72 / 39.74** | **36.78 / 22.34** | **71.39 / 63.46** |
-| DPR | 19.71 / 37.99 | 65.19 / 26.73 | 38.18 / 26.93 | 51.54 / 61.84 |
-| **DPR + IRENE** | **35.07 / 52.57** | **89.52 / 39.84** | **43.08 / 29.25** | **70.39 / 66.71** |
-| MACLR | 9.26 / 7.52 | 59.44 / 14.31 | 27.50 / 15.99 | 46.59 / 46.62 |
-| **MACLR + IRENE** | **30.40 / 44.71** | **88.81 / 38.37** | **31.49 / 18.85** | **70.52 / 62.82** |
+<table>
+  <thead>
+    <tr>
+      <th rowspan="2">Model</th>
+      <th colspan="2">LF-AOL-270K</th>
+      <th colspan="2">LF-WikiHierarchy-550K</th>
+      <th colspan="2">LF-AmazonTitles-1.3M</th>
+      <th colspan="2">LF-Wikipedia-500K</th>
+    </tr>
+    <tr>
+      <th>P@1</th><th>R@10</th>
+      <th>P@1</th><th>R@10</th>
+      <th>P@1</th><th>R@10</th>
+      <th>P@1</th><th>R@10</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>NGAME</td><td>20.16</td><td>38.27</td><td>66.19</td><td>27.08</td><td>45.14</td><td>30.25</td><td>81.86</td><td>69.58</td></tr>
+    <tr><td><b>NGAME + IRENE</b></td><td><b>35.11</b></td><td><b>52.30</b></td><td><b>91.33</b></td><td><b>40.09</b></td><td><b>47.77</b></td><td><b>31.49</b></td><td>78.99</td><td>69.27</td></tr>
+    <tr><td>ANCE</td><td>22.63</td><td>49.72</td><td>68.76</td><td>25.89</td><td>27.65</td><td>17.31</td><td>42.91</td><td>43.39</td></tr>
+    <tr><td><b>ANCE + IRENE</b></td><td><b>30.84</b></td><td><b>51.75</b></td><td><b>90.72</b></td><td><b>39.74</b></td><td><b>36.78</b></td><td><b>22.34</b></td><td><b>71.39</b></td><td><b>63.46</b></td></tr>
+    <tr><td>DPR</td><td>19.71</td><td>37.99</td><td>65.19</td><td>26.73</td><td>38.18</td><td>26.93</td><td>51.54</td><td>61.84</td></tr>
+    <tr><td><b>DPR + IRENE</b></td><td><b>35.07</b></td><td><b>52.57</b></td><td><b>89.52</b></td><td><b>39.84</b></td><td><b>43.08</b></td><td><b>29.25</b></td><td><b>70.39</b></td><td><b>66.71</b></td></tr>
+    <tr><td>MACLR</td><td>9.26</td><td>7.52</td><td>59.44</td><td>14.31</td><td>27.50</td><td>15.99</td><td>46.59</td><td>46.62</td></tr>
+    <tr><td><b>MACLR + IRENE</b></td><td><b>30.40</b></td><td><b>44.71</b></td><td><b>88.81</b></td><td><b>38.37</b></td><td><b>31.49</b></td><td><b>18.85</b></td><td><b>70.52</b></td><td><b>62.82</b></td></tr>
+    <tr><td>SemSup-XC</td><td>26.12</td><td>23.92</td><td>90.51</td><td>28.37</td><td>25.13</td><td>15.21</td><td>54.20</td><td>38.08</td></tr>
+    <tr><td><a href="https://github.com/Extreme-classification/DEXA">DEXA</a></td><td>25.09</td><td>46.76</td><td>76.18</td><td>36.17</td><td>48.19</td><td>30.89</td><td>67.98</td><td>65.86</td></tr>
+  </tbody>
+</table>
 
-> Full results including R@3, R@5, R@30, R@100, P@3, P@5 for all models are in Tables 14–15 of the supplementary document.
-
-### Inference Efficiency (LF-AmazonTitles-1.3M-10, single V100)
-
-| Method | Rep. Time (ms/item) | Retrieval Time (ms/query) |
-|--------|:-------------------:|:-------------------------:|
-| NGAME | 0.08 | 0.43 |
-| DEXA | 0.48 | 0.43 |
-| **NGAME + IRENE** | **0.54** | **0.43** |
-| SemSup-XC | N/A | 151.51 |
-
-IRENE adds only **+0.4 ms** per item and is **~350× faster** than SemSup-XC at inference.
-
----
-
-## Repository Structure
-
-```
-IRENE/
-├── train.py                    # Main training script
-├── nets.py                     # MetaClfGen: Transformer meta-classifier generator (G)
-├── datasets.py                 # Dataset, collate, and batch-sampling utilities
-├── aol_ablations.sh            # Example training script for LF-AOL-270K_10
-├── utils/
-│   ├── helper_utils.py         # YAML config loading with dependency resolution
-│   ├── eval_utils.py           # Evaluation: ANNS / OvA prediction, XC metrics
-│   └── cluster_gpu.py          # Multi-GPU balanced k-means clustering for curriculum
-└── configs/
-    ├── base_config.yaml                          # Shared defaults for all datasets
-    ├── LF-AOL-270K_10/
-    │   ├── dataset.yaml                          # Dataset-specific fields
-    │   └── meta_clf_gen.yaml                     # Full training config (inherits base_config)
-    ├── LF-WikiHierarchy-550K_10/
-    ├── LF-AmazonTitles-1.3M_10/
-    └── LF-Wikipedia-500K_10/
-```
+> Full results (P@1, P@3, P@5, R@3, R@5, R@10, R@30, R@100) are in Tables 14–15 of the supplementary document.
 
 ---
 
