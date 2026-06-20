@@ -29,11 +29,13 @@ class ScoreEmbedding(torch.nn.Module):
 
 
 class MetaClfGen(torch.nn.Module):
-    """
-    A network class to support Siamese style training
-    * specialized for sentence-bert or hugging face
-    * hard-coded to use a joint encoder
+    """Meta-Classifier Generator (G) of IRENE.
 
+    A Transformer-encoder combiner that synthesizes a meta-classifier for a label
+    from its own (precomputed) text embedding and the frozen base classifiers of its
+    K nearest seen-label neighbors. Per-neighbor proximity scores and a token-type
+    positional signal are injected before the encoder; the output is the mean-pooled
+    sequence representation over the label and its valid neighbors.
     """
 
     def __init__(

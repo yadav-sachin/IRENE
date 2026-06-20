@@ -1,26 +1,17 @@
-import torch
 import os
-import numpy as np
-from tqdm import trange
-from xclib.evaluation import xc_metrics
-import numba as nb
-from xclib.utils.matrix import SMatrix
-from scipy.sparse import csr_matrix
-import torch.nn.functional as F
-import hnswlib
 import gc
-import functools
 import time
-import pandas as pd
-from collections import defaultdict
-import torch.distributed as dist
-from sklearn.preprocessing import normalize
-from xclib.utils.sparse import csr_from_arrays
-import xclib.evaluation.xc_metrics as xc_metrics
-from xclib.utils.shortlist import Shortlist
-from tqdm import tqdm
+import functools
 
-from xclib.data import data_utils
+import numpy as np
+import torch
+from tqdm import tqdm
+from scipy.sparse import csr_matrix
+
+from xclib.evaluation import xc_metrics
+from xclib.utils.matrix import SMatrix
+from xclib.utils.sparse import csr_from_arrays
+from xclib.utils.shortlist import Shortlist
 
 
 

@@ -152,7 +152,7 @@ The two most important IRENE-specific hyperparameters, validated through ablatio
 
 | Parameter | Default | Notes |
 |-----------|---------|-------|
-| `num_neighbors` (K) | 3 | Smaller K yields tighter generalization bound and better empirical performance; K=3 works well across all datasets |
+| `num_neighbors` (K) | 3 | Smaller K yields a tighter generalization bound and strong empirical performance; K=3 works well across all datasets |
 | `num_layers` (D) | 1 | One Transformer layer is sufficient; deeper G tends to overfit |
 | `neighbor_itself` | `False` | Whether a seen label attends to itself during training. Must be `False`: at test time, novel labels are absent from the seen label space and can never be their own neighbor, so including self-attention during training would create a train/test mismatch |
 

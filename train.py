@@ -4,14 +4,12 @@ from functools import partial
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.utils.data
 import transformers
 import wandb
 from scipy.sparse import csr_matrix, load_npz
 from tqdm import tqdm
 from xclib.utils.clustering import cluster_balance, b_kmeans_dense
-from xclib.utils.matrix import SMatrix
 
 from utils.helper_utils import load_config_and_runtime_args
 from utils.cluster_gpu import balanced_cluster
