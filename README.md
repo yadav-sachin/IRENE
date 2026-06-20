@@ -1,12 +1,21 @@
-<img src="media/KDD_logo.png" height="80" align="right"/>
-<img src="media/microsoft_logo.png" height="80" align="right"/>
+<img src="media/KDD_logo.png" height="64" align="right"/>
+<img src="media/microsoft_logo.png" height="64" align="right"/>
 
-# IRENE: Extreme Meta-Classification for Large-Scale Zero-Shot Retrieval
+<div align="center">
 
-[![KDD 2024](https://img.shields.io/badge/Venue-KDD%202024-blue)](https://dl.acm.org/doi/10.1145/3637528.3672046)
-[![Paper](https://img.shields.io/badge/Paper-PDF-red)](http://manikvarma.org/pubs/yadav24.pdf)
-[![Supplementary](https://img.shields.io/badge/Supplementary-PDF-orange)](https://www.siddarthasokan.com/assets/pdf/EMMETT_IRENE24_Supp.pdf)
-[![Patent](https://img.shields.io/badge/Patent-US12499168B2-green)](https://patents.google.com/patent/US12499168B2)
+# Extreme Meta-Classification for Large-Scale Zero-Shot Retrieval
+
+[![KDD 2024](https://img.shields.io/badge/Venue-KDD%202024-1f6feb?style=flat-square)](https://dl.acm.org/doi/10.1145/3637528.3672046)
+[![Paper](https://img.shields.io/badge/Paper-PDF-d1242f?style=flat-square)](http://manikvarma.org/pubs/yadav24.pdf)
+[![Supplementary](https://img.shields.io/badge/Supplementary-PDF-e36209?style=flat-square)](https://www.siddarthasokan.com/assets/pdf/EMMETT_IRENE24_Supp.pdf)
+[![Patent](https://img.shields.io/badge/Patent-US12499168B2-2da44e?style=flat-square)](https://patents.google.com/patent/US12499168B2)
+
+Sachin Yadav · Deepak Saini · Anirudh Buvanesh · Bhawna Paliwal · Kunal Dahiya<br/>
+Siddarth Asokan · Yashoteja Prabhu · Jian Jiao · Manik Varma
+
+**[Paper](http://manikvarma.org/pubs/yadav24.pdf)** · **[Supplementary](https://www.siddarthasokan.com/assets/pdf/EMMETT_IRENE24_Supp.pdf)** · **[ACM DL](https://dl.acm.org/doi/10.1145/3637528.3672046)** · **[Patent](https://patents.google.com/patent/US12499168B2)**
+
+</div>
 
 Official implementation of **"Extreme Meta-Classification for Large-Scale Zero-Shot Retrieval"** (KDD 2024).
 
@@ -20,6 +29,15 @@ Extreme classification (XC) involves retrieving the most relevant labels from mi
 
 - **Classifier Selector (S):** Retrieves *K* nearest neighbor labels from the seen set for a given novel label, using an ANNS index over label embeddings.
 - **Meta-Classifier Generator (G):** A Transformer encoder that takes the novel label's embedding and the classifiers of its *K* neighbors as input, and produces a synthesized meta-classifier for retrieval.
+
+```
+                       ┌───────────────────────┐      ┌───────────────────────┐
+   novel label    ───▶ │  Classifier Selector  │ ───▶ │ Meta-Classifier Gen.  │ ───▶   synthesized
+   (text embedding)    │   (S) · ANNS  k-NN    │      │   (G) · Transformer   │       meta-classifier
+                       └───────────────────────┘      └───────────────────────┘
+                                   │                              ▲
+                                   └──── K seen-label classifiers ┘
+```
 
 The key insight is that seen-label classifiers encode rich collaborative signals — patterns of co-relevance across queries — that are absent from a text embedding alone. By combining a novel label's text embedding with the classifiers of its seen neighbors, IRENE produces a representation that captures both semantic similarity and collaborative structure, without retraining the base model.
 
@@ -160,9 +178,11 @@ The two most important IRENE-specific hyperparameters, validated through ablatio
 
 ## Results
 
-Datasets are from the [Extreme Classification Repository](http://manikvarma.org/downloads/XC/XMLRepository.html), with a 90/10 seen/novel split of labels. Metrics: **P@1** and **R@10**.
+Datasets are from the [Extreme Classification Repository](http://manikvarma.org/downloads/XC/XMLRepository.html), with a 90/10 seen/novel split of labels. Metrics are **P@1** and **R@10**; **bold** marks the IRENE-augmented variant of each base retriever.
 
 ### Zero-Shot Retrieval
+
+<div align="center">
 
 <table>
   <thead>
@@ -194,7 +214,11 @@ Datasets are from the [Extreme Classification Repository](http://manikvarma.org/
   </tbody>
 </table>
 
+</div>
+
 ### Generalized Zero-Shot Retrieval
+
+<div align="center">
 
 <table>
   <thead>
@@ -225,6 +249,8 @@ Datasets are from the [Extreme Classification Repository](http://manikvarma.org/
     <tr><td><a href="https://github.com/Extreme-classification/DEXA">DEXA</a></td><td>25.09</td><td>46.76</td><td>76.18</td><td>36.17</td><td>48.19</td><td>30.89</td><td>67.98</td><td>65.86</td></tr>
   </tbody>
 </table>
+
+</div>
 
 > Full results (P@1, P@3, P@5, R@3, R@5, R@10, R@30, R@100) are in Tables 14–15 of the [supplementary document](https://www.siddarthasokan.com/assets/pdf/EMMETT_IRENE24_Supp.pdf).
 
