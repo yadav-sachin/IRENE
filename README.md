@@ -34,6 +34,23 @@ pip install -r requirements.txt
 
 ## Data Preparation
 
+### Zero-Shot Dataset Splits
+
+Datasets are sourced from the [Extreme Classification Repository](http://manikvarma.org/downloads/XC/XMLRepository.html) (LF-prefixed variants with label text features). 10% of labels are randomly drawn from the full label set and designated as **novel**; the remaining 90% are **seen**:
+
+```
+All labels  ──────────────────────────────────────────
+            │◄────── 90% seen ────────►│◄─ 10% novel ─►│
+
+Training    queries with ≥1 seen-label positive  →  Y.trn.npz      [N_trn   × L_seen]
+Zero-shot   test queries with ≥1 novel positive  →  Y.tst_zero.npz [N_zero  × L_novel]
+Generalized all test queries, all labels         →  Y.tst_full.npz [N_test  × L_all]
+```
+
+The (query, label) pairs in each split come directly from the original dataset's ground-truth annotations — no new pairs are synthesized. For the zero-shot test, only pairs whose label falls in the novel set are retained; for the generalized test, all original test pairs are kept across the full label space. The model is trained exclusively on seen labels and evaluated at test time on novel labels it has never encountered. Filter files follow the [XMLRepository reciprocal-pair convention](http://manikvarma.org/downloads/XC/XMLRepository.html#filter) to exclude trivially self-referential predictions from evaluation.
+
+### Directory Structure
+
 Training requires precomputed embeddings and classifiers from a base extreme classifier. Organize files as:
 
 ```
